@@ -4,6 +4,7 @@ import './App.css';
 import VideoPlayer from './components/VideoPlayer/VideoPlayer';
 import Options from './components/Options/Options';
 import Notification from './components/Notification/Notification';
+import Testfile from './components/teste/Testfile'
 
 // const useStyles = makeStyles((theme) => ({
 //   appBar: {
@@ -21,25 +22,21 @@ function App() {
   // const classes = useStyles();
 
   return (
-    <div className='wrapper'>
-      <AppBar className='appBar' position='static' color='inherit'>
-        <Typography variant='h2' align='center'>
-          Video Chat
-        </Typography>
-      </AppBar>
 
+    <>
+      <Notification />
+
+      <Testfile />
       {/* Video Palyer */}
-      <VideoPlayer />
+      {/* <VideoPlayer /> */}
 
       {/* Options Component */}
       <div className='app_options'>
         <Options>
           {/* Notification Component */}
-          <Notification />
         </Options>
       </div>
-
-    </div>
+    </>
   );
 }
 
