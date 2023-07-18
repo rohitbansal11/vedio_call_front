@@ -86,7 +86,7 @@ const ContextProvider = ({ children }) => {
 
         connectionRef.current.destroy();
 
-        window.location.reload();
+        // window.location.reload();
     }
 
     const muteMe = (data) => {
@@ -114,30 +114,35 @@ const ContextProvider = ({ children }) => {
         videoElement.srcObject = stream;
         videoElement.play();
         if (peer) {
-            
+
             peer.replaceStream(stream);
-          }
+        }
         setMovecamera(!moveCamera)
 
     }
 
 
     const stopcamera = (data) => {
-        const vedioTrack = stream.getVideoTracks()[0];
-        if (data) {
-            vedioTrack.enabled = true;
-        } else {
-            vedioTrack.enabled = false;
+        try {
+            const vedioTrack = stream.getVideoTracks()[0];
+            console.log(vedioTrack)
+            if (data) {
+                vedioTrack.enabled = true;
+            } else {
+                vedioTrack.enabled = false;
+            }
+            // if (data) {
+            //     setRestartVedio(Math.random())
+            // } else {
+            //     stream.getTracks().forEach((track) => {
+            //         if (track.readyState == 'live' && track.kind === 'video') {
+            //             track.stop();
+            //         }
+            //     });
+            // }
+        } catch (error) {
+            alert(error.message)
         }
-        // if (data) {
-        //     setRestartVedio(Math.random())
-        // } else {
-        //     stream.getTracks().forEach((track) => {
-        //         if (track.readyState == 'live' && track.kind === 'video') {
-        //             track.stop();
-        //         }
-        //     });
-        // }
     }
 
     return (
