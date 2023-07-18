@@ -16,6 +16,7 @@ const VideoPlayer = () => {
 
 
     const { call, callAccepted, callEnded, stream, myVideo, userVideo, Name, muteMe, moveCameraFuc, stopcamera } = useContext(SocketContext);
+   
     return (
         <>
 
@@ -27,19 +28,21 @@ const VideoPlayer = () => {
                             {
                                 stream && (
                                     <>
-                                        {
+                                        {/* {
                                             !hideCamera ?
                                                 <img src={hdh} class="host-img video"/> :
                                                 <video playsInline ref={myVideo} autoPlay class="host-img video" />
 
-                                        }
+                                        } */}
+                                                <video playsInline ref={myVideo} autoPlay class="host-img video" />
+
 
 
                                         <div class="contarols">
 
                                             <span style={{
                                                 cursor: 'pointer',
-                                                margin: '5px'
+                                                margin: '10px'
                                             }} onClick={() => {
                                                 setMicHook(!micHook)
                                                 muteMe(!micHook)
@@ -47,7 +50,7 @@ const VideoPlayer = () => {
                                             <MobileView>
                                                 <span style={{
                                                     cursor: 'pointer',
-                                                    margin: '5px'
+                                                    margin: '10px'
                                                 }} onClick={() => {
                                                     moveCameraFuc()
                                                 }} ><FlipCameraAndroidIcon /></span>
@@ -57,7 +60,7 @@ const VideoPlayer = () => {
 
                                             <span style={{
                                                 cursor: 'pointer',
-                                                margin: '5px'
+                                                margin: '10px'
                                             }} onClick={() => {
                                                 stopcamera(!hideCamera)
                                                 setHidecamear(!hideCamera)

@@ -9,7 +9,7 @@ const socket = io('https://vedio-call-app.onrender.com/');
 
 
 const ContextProvider = ({ children }) => {
-
+    let peer = null;
     const [stream, setStream] = useState(null);
     const [me, setMe] = useState('');
     const [call, setCall] = useState({});
@@ -26,7 +26,7 @@ const ContextProvider = ({ children }) => {
     useEffect(() => {
         navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: moveCamera ? 'user' : 'environment'
+                facingMode: 'user'
             },
             audio: true
         }).then(currentStream => {
@@ -46,7 +46,7 @@ const ContextProvider = ({ children }) => {
     const answerCall = () => {
         setCallAccepted(true);
 
-        const peer = new Peer({ initiator: false, trickle: false, stream: stream });
+        peer = new Peer({ initiator: false, trickle: false, stream: stream });
 
         peer.on('signal', (data) => {
             socket.emit('answercall', { signal: data, to: call.from });
@@ -62,7 +62,7 @@ const ContextProvider = ({ children }) => {
     }
 
     const callUser = (id) => {
-        const peer = new Peer({ initiator: true, trickle: false, stream: stream });
+        peer = new Peer({ initiator: true, trickle: false, stream: stream });
 
         peer.on('signal', (data) => {
             socket.emit('calluser', { userToCall: id, signalData: data, from: me, name: Name });
@@ -90,35 +90,54 @@ const ContextProvider = ({ children }) => {
     }
 
     const muteMe = (data) => {
-        if(data){
-            const audioTrack = stream.getAudioTracks()[0]; 
+        const audioTrack = stream.getAudioTracks()[0];
+        if (data) {
             audioTrack.enabled = true;
-        }else{
-            const audioTrack = stream.getAudioTracks()[0]; 
+        } else {
             audioTrack.enabled = false;
         }
-
-        // stream.getTracks().forEach((track) => {
-        //     if (track.readyState == 'live' && track.kind === 'audio') {
-        //         track.stop();
-        //     }
-        // });
     }
 
-    const moveCameraFuc = () => {
+    const moveCameraFuc = async () => {
+        const videoElement = myVideo.current;
+        const videoTrack = stream.getVideoTracks()[0];
+
+        const constraints = { deviceId: videoTrack.getSettings().deviceId };
+
+        const newStream = await navigator.mediaDevices.getUserMedia({ ...constraints, video: { facingMode: moveCamera ? 'environment' : 'user' } });
+        videoTrack.stop();
+        videoTrack.enabled = false;
+        stream.removeTrack(videoTrack);
+        stream.addTrack(newStream.getVideoTracks()[0]);
+        videoTrack.stop();
+        videoTrack.enabled = false;
+        videoElement.srcObject = stream;
+        videoElement.play();
+        if (peer) {
+            
+            peer.replaceStream(stream);
+          }
         setMovecamera(!moveCamera)
+
     }
+
 
     const stopcamera = (data) => {
+        const vedioTrack = stream.getVideoTracks()[0];
         if (data) {
-            setRestartVedio(Math.random())
+            vedioTrack.enabled = true;
         } else {
-            stream.getTracks().forEach((track) => {
-                if (track.readyState == 'live' && track.kind === 'video') {
-                    track.stop();
-                }
-            });
+            vedioTrack.enabled = false;
         }
+        // if (data) {
+        //     setRestartVedio(Math.random())
+        // } else {
+        //     stream.getTracks().forEach((track) => {
+        //         if (track.readyState == 'live' && track.kind === 'video') {
+        //             track.stop();
+        //         }
+        //     });
+        // }
     }
 
     return (
