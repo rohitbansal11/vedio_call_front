@@ -16,9 +16,11 @@
     "react-device-detect": "^2.2.3",
     "react-dom": "^18.0.0",
     "react-scripts": "5.0.0",
+    "react-webcam": "^7.1.1",
     "simple-peer": "^9.11.1",
     "socket.io-client": "^4.4.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "webrtc-adapter": "^8.2.3"
   },
   "scripts": {
     "start": "react-scripts start",

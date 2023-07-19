@@ -1,7 +1,6 @@
 import React, { createContext, useState, useRef, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import Peer from 'simple-peer';
-
 const SocketContext = createContext();
 
 const socket = io('https://vedio-call-app.onrender.com/');
@@ -9,9 +8,9 @@ const socket = io('https://vedio-call-app.onrender.com/');
 
 
 const ContextProvider = ({ children }) => {
-    let peer = null;
     const [stream, setStream] = useState(null);
     const [me, setMe] = useState('');
+    const [callToid, setCallToId] = useState()
     const [call, setCall] = useState({});
     const [callAccepted, setCallAccepted] = useState(false);
     const [callEnded, setCallEnded] = useState(false);
@@ -20,18 +19,34 @@ const ContextProvider = ({ children }) => {
     const userVideo = useRef();
     const connectionRef = useRef();
     const [audioHook, setAudioHook] = useState(true)
-    const [moveCamera, setMovecamera] = useState(true)
-    const [restertVedio, setRestartVedio] = useState()
+    const [moveCamera, setMovecamera] = useState(false)
+    const [facingMode, setFacingMode] = useState('user');
     //video: { facingMode: front ? "user" : "environment" },
     useEffect(() => {
+
         navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: 'user'
-            },
-            audio: true
+            video: { facingMode: facingMode },
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+            }
         }).then(currentStream => {
             setStream(currentStream);
             myVideo.current.srcObject = currentStream;
+            // if (connectionRef.current && callAccepted) {
+            //     const videoTrack = stream.getVideoTracks()[0];
+            //     connectionRef.current.peer.addTrack(videoTrack, currentStream);
+            // }
+
+            console.log(connectionRef.current.peer.streams)
+
+            if (connectionRef.current && callAccepted) {
+                connectionRef.current.peer.replaceTrack(
+                    stream.getVideoTracks()[0],
+                    currentStream.getVideoTracks()[0],
+                    stream
+                );
+            }
         });
 
         socket.on('me', (id) => setMe(id));
@@ -39,14 +54,15 @@ const ContextProvider = ({ children }) => {
         socket.on('calluser', ({ from, name: callerName, signal }) => {
             setCall({ isReceivedCall: true, from, name: callerName, signal });
         });
-    }, [audioHook, restertVedio]);
 
-    // console.log(me);
+    }, [facingMode]);
+
+
 
     const answerCall = () => {
         setCallAccepted(true);
 
-        peer = new Peer({ initiator: false, trickle: false, stream: stream });
+        const peer = new Peer({ initiator: false, trickle: false, stream: stream });
 
         peer.on('signal', (data) => {
             socket.emit('answercall', { signal: data, to: call.from });
@@ -56,13 +72,21 @@ const ContextProvider = ({ children }) => {
             userVideo.current.srcObject = currentStream;
         });
 
+        connectionRef.current = {
+            peer,
+            localStream: stream,
+        };
+
+        // stream.getTracks().forEach((track) => {
+        //     connectionRef.current.peer.addTrack(track, stream);
+        // });
         peer.signal(call.signal);
 
-        connectionRef.current = peer;
+
     }
 
     const callUser = (id) => {
-        peer = new Peer({ initiator: true, trickle: false, stream: stream });
+        const peer = new Peer({ initiator: true, trickle: false, stream: stream });
 
         peer.on('signal', (data) => {
             socket.emit('calluser', { userToCall: id, signalData: data, from: me, name: Name });
@@ -78,7 +102,9 @@ const ContextProvider = ({ children }) => {
             peer.signal(signal);
         });
 
-        connectionRef.current = peer;
+        connectionRef.current = { peer };
+        connectionRef.current.localStream = stream;
+
     }
 
     const leaveCall = () => {
@@ -86,7 +112,7 @@ const ContextProvider = ({ children }) => {
 
         connectionRef.current.destroy();
 
-        // window.location.reload();
+        window.location.reload();
     }
 
     const muteMe = (data) => {
@@ -98,55 +124,32 @@ const ContextProvider = ({ children }) => {
         }
     }
 
-    const moveCameraFuc = async () => {
-        const videoElement = myVideo.current;
-        const videoTrack = stream.getVideoTracks()[0];
+    // Switch between front and back cameras
+    const flipCamera = () => {
+        const videoTracks = stream.getVideoTracks();
+        videoTracks.forEach((track) => {
+            track.stop();
+        });
 
-        const constraints = { deviceId: videoTrack.getSettings().deviceId };
+        setFacingMode((prevFacingMode) =>
+            prevFacingMode === 'environment' ? 'user' : 'environment'
+        );
+    };
 
-        const newStream = await navigator.mediaDevices.getUserMedia({ ...constraints, video: { facingMode: moveCamera ? 'environment' : 'user' } });
-        videoTrack.stop();
-        videoTrack.enabled = false;
-        stream.removeTrack(videoTrack);
-        stream.addTrack(newStream.getVideoTracks()[0]);
-        videoTrack.stop();
-        videoTrack.enabled = false;
-        videoElement.srcObject = stream;
-        videoElement.play();
-        if (peer) {
-
-            peer.replaceStream(stream);
-        }
-        setMovecamera(!moveCamera)
-
-    }
 
 
     const stopcamera = (data) => {
-        try {
-            const vedioTrack = stream.getVideoTracks()[0];
-            console.log(vedioTrack)
-            if (data) {
-                vedioTrack.enabled = true;
-            } else {
-                vedioTrack.enabled = false;
-            }
-            // if (data) {
-            //     setRestartVedio(Math.random())
-            // } else {
-            //     stream.getTracks().forEach((track) => {
-            //         if (track.readyState == 'live' && track.kind === 'video') {
-            //             track.stop();
-            //         }
-            //     });
-            // }
-        } catch (error) {
-            alert(error.message)
+        const vedioTrack = stream.getVideoTracks()[0];
+        if (data) {
+            vedioTrack.enabled = true;
+        } else {
+            vedioTrack.enabled = false;
         }
+
     }
 
     return (
-        <SocketContext.Provider value={{ call, stopcamera, callAccepted, moveCameraFuc, callEnded, stream, myVideo, userVideo, Name, setName, me, callUser, leaveCall, muteMe, answerCall }}>
+        <SocketContext.Provider value={{ call, setCallToId, flipCamera, stopcamera, callAccepted, callEnded, stream, myVideo, userVideo, Name, setName, me, callUser, leaveCall, muteMe, answerCall }}>
             {children}
         </SocketContext.Provider>
     );

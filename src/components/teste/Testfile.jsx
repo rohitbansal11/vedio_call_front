@@ -8,15 +8,16 @@ import MicNoneOutlinedIcon from '@mui/icons-material/MicNoneOutlined';
 import MicOffOutlinedIcon from '@mui/icons-material/MicOffOutlined';
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
 import { BrowserView, MobileView } from 'react-device-detect';
+import Webcam from "react-webcam";
 const VideoPlayer = () => {
     const hdh = 'https://i.postimg.cc/521rVkhD/image.png'
     const [micHook, setMicHook] = useState(true)
-    const [cameraHook, setcameraHook] = useState(true)
+    const [cameraHook, setcameraHook] = useState(false)
     const [hideCamera, setHidecamear] = useState(true)
 
 
-    const { call, callAccepted, callEnded, stream, myVideo, userVideo, Name, muteMe, moveCameraFuc, stopcamera } = useContext(SocketContext);
-   
+    const { call, flipCamera, callAccepted, callEnded, stream, myVideo, userVideo, Name, muteMe, stopcamera } = useContext(SocketContext);
+
     return (
         <>
 
@@ -24,7 +25,7 @@ const VideoPlayer = () => {
 
                 <div class="container">
                     <div class="row">
-                        <div class="col-10">
+                        <div class="col-2">
                             {
                                 stream && (
                                     <>
@@ -34,7 +35,7 @@ const VideoPlayer = () => {
                                                 <video playsInline ref={myVideo} autoPlay class="host-img video" />
 
                                         } */}
-                                                <video playsInline ref={myVideo} autoPlay class="host-img video" />
+                                        <video playsInline ref={myVideo} autoPlay class="host-img video" />
 
 
 
@@ -52,7 +53,8 @@ const VideoPlayer = () => {
                                                     cursor: 'pointer',
                                                     margin: '10px'
                                                 }} onClick={() => {
-                                                    moveCameraFuc()
+                                                    setcameraHook(!cameraHook)
+                                                    flipCamera(!cameraHook)
                                                 }} ><FlipCameraAndroidIcon /></span>
                                             </MobileView>
 
@@ -77,11 +79,8 @@ const VideoPlayer = () => {
 
                             {
                                 callAccepted && !callEnded && (
-                                    <div class="joined">
-                                        <p>People Joined</p>
-                                        <video playsInline ref={userVideo} autoPlay className='video' />
+                                    <video playsInline ref={userVideo} autoPlay className='video' />
 
-                                    </div>
 
                                 )
                             }

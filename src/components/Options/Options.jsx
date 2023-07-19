@@ -7,7 +7,7 @@ import './Options.css';
 
 const Options = ({ children }) => {
 
-  const { me, callAccepted, Name, setName, callEnded, leaveCall, callUser } = useContext(SocketContext);
+  const { me, callAccepted, setCallToId, Name, setName, callEnded, leaveCall, callUser } = useContext(SocketContext);
   const [idToCall, setIdToCall] = useState('');
 
   // console.log(Name);
@@ -29,7 +29,10 @@ const Options = ({ children }) => {
 
             <Grid item xs={12} md={6} className='padding' >
               <Typography gutterBottom variant='h6' > Make a Call </Typography>
-              <TextField label='ID For Call' value={idToCall} onChange={(e) => setIdToCall(e.target.value)} fullWidth />
+              <TextField label='ID For Call' value={idToCall} onChange={(e) => {
+                setIdToCall(e.target.value)
+                setCallToId(e.target.value)
+              }} fullWidth />
               <Grid className='margin'>
                 {callAccepted && !callEnded ?
                   (
